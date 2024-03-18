@@ -1,3 +1,4 @@
+
 import sys
 sys.path.extend(['..'])
 from config.config import *
@@ -6,17 +7,18 @@ from keras import backend as K
 K.set_image_data_format(IMAGE_FILE_FORMAT)
 
 import tensorflow as tf
-config = tf.ConfigProto(log_device_placement=False)
+from tensorflow.keras.layers import Flatten
+
+config = tf.compat.v1.ConfigProto(log_device_placement=False)
 config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
 
 from data.load_data import load_data, load_doc
-from keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.text import Tokenizer  # Updated import statement
 from model.CodeGeneratorModel import CodeGeneratorModel
 from data_loader.DataGenerator import *
+
 from utils.callbacks import *
 from contextlib import redirect_stdout
-
 
 def trainer(train_dir_name, eval_dir_name, out_dir_name):
     '''
