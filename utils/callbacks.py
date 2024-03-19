@@ -14,7 +14,7 @@ class TrainValTensorBoard(TensorBoard):
 
     def set_model(self, model):
         # Setup writer for validation metrics
-        self.val_writer = tf.summary.FileWriter(self.val_log_dir)
+        self.val_writer = tf.summary.create_file_writer(self.val_log_dir)
         super(TrainValTensorBoard, self).set_model(model)
 
     def on_epoch_end(self, epoch, logs=None):
