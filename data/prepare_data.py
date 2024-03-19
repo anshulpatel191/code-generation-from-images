@@ -2,7 +2,7 @@ import cv2
 import os
 import numpy as np
 import shutil
-from data.split_dataset import split_dataset, partition_data
+from split_dataset import split_dataset, partition_data
 
 
 def get_preprocessed_image(img_path, image_size):
