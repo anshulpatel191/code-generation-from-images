@@ -1,8 +1,6 @@
 from keras.models import Sequential, Model
 from keras.layers import Embedding, RepeatVector, LSTM, \
-    concatenate, Input, Reshape, Dense, GRU, MaxPooling2D
-from keras.layers.convolutional import Conv2D
-from keras.layers.core import Dense, Dropout, Flatten
+    concatenate, Input, Reshape, Dense, GRU, MaxPooling2D, Conv2D, Dense, Dropout, Flatten
 from keras.optimizers import Adam
 from base.BaseModel import BaseModel
 from config.config import *
