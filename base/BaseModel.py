@@ -1,6 +1,6 @@
 import os
 from keras.models import model_from_json
-from keras.utils.vis_utils import plot_model
+from keras.utils import plot_model
 from contextlib import redirect_stdout
 import glob
 
