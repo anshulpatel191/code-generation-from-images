@@ -276,44 +276,14 @@ def split_dataset(input_path):
                                                                                                          testing_samples_number,
                                                                                                          evaluation_samples_number))
 
+    eval_set = paths[:evaluation_samples_number]
+    test_set = paths[evaluation_samples_number:evaluation_samples_number+testing_samples_number]
+    train_set = paths[evaluation_samples_number+testing_samples_number:]
     
-    # eval_set = paths[:evaluation_samples_number]
-    # test_set = paths[evaluation_samples_number:evaluation_samples_number+testing_samples_number]
-    # train_set = paths[evaluation_samples_number+testing_samples_number:]
-    
-    eval_set = []
-    test_set = []
-    train_set = []
-    hashes = []
-
-    for path in paths:
-        # Read the content of the text file and calculate its hash
-        with open(os.path.join(input_path, path + ".txt"), 'r', encoding='utf-8') as f:
-            content = f.read()
-            content_hash = hashlib.sha256(content.encode('utf-8')).hexdigest()
-
-        # Decide which set to add the current sample based on its hash
-        if len(eval_set) == evaluation_samples_number and len(test_set) == testing_samples_number:
-            train_set.append(path)
-        else:
-            is_unique = True
-            for h in hashes:
-                if h == content_hash:
-                    is_unique = False
-                    break
-
-            if is_unique and len(test_set) != testing_samples_number:
-                test_set.append(path)
-            elif is_unique and len(eval_set) != evaluation_samples_number:
-                eval_set.append(path)
-            else:
-                train_set.append(path)
-
-        hashes.append(content_hash)
-
-    assert len(test_set) == testing_samples_number
-    assert len(eval_set) == evaluation_samples_number
-    assert len(train_set) == training_samples_number
+    # eval_set = []
+    # test_set = []
+    # train_set = []
+    # hashes = []
 
     if not os.path.exists(os.path.join(os.path.dirname(input_path), TESTING_SET_NAME)):
         os.makedirs(os.path.join(os.path.dirname(input_path), TESTING_SET_NAME))
@@ -327,18 +297,17 @@ def split_dataset(input_path):
     for path in test_set:
         shutil.copyfile(os.path.join(input_path, path + ".jpeg"), os.path.join(os.path.dirname(input_path), TESTING_SET_NAME, path + ".jpeg"))
         shutil.copyfile(os.path.join(input_path, path + ".txt"), os.path.join(os.path.dirname(input_path), TESTING_SET_NAME, path + ".txt"))
+        print("Testing dataset: {}/{}".format(os.path.dirname(input_path), TESTING_SET_NAME))
 
     for path in eval_set:
         shutil.copyfile(os.path.join(input_path, path + ".jpeg"), os.path.join(os.path.dirname(input_path), EVALUATION_SET_NAME, path + ".jpeg"))
         shutil.copyfile(os.path.join(input_path, path + ".txt"), os.path.join(os.path.dirname(input_path), EVALUATION_SET_NAME, path + ".txt"))
+        print("Evaluation dataset: {}/{}".format(os.path.dirname(input_path), EVALUATION_SET_NAME))
 
     for path in train_set:
         shutil.copyfile(os.path.join(input_path, path + ".jpeg"), os.path.join(os.path.dirname(input_path), TRAINING_SET_NAME, path + ".jpeg"))
         shutil.copyfile(os.path.join(input_path, path + ".txt"), os.path.join(os.path.dirname(input_path), TRAINING_SET_NAME, path + ".txt"))
-
-    print("Training dataset: {}/training_set".format(os.path.dirname(input_path), path))
-    print("Evaluation dataset: {}/eval_set".format(os.path.dirname(input_path), path))
-    print("Testing dataset: {}/test_set".format(os.path.dirname(input_path), path))
+        print("Training dataset: {}/{}".format(os.path.dirname(input_path), TRAINING_SET_NAME))
 
 
 def partition_data(input_path):
@@ -357,6 +326,3 @@ def partition_data(input_path):
 
     if os.path.exists('../data/img/test_images'):
         print('Test set images already exist at ../data/img/test_images and are ready to be converted to arrays')
-
-
-
