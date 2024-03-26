@@ -113,19 +113,19 @@ def convert_image_to_array(input_path, output_path):
 def prepare_data(train_dir_name, eval_dir_name, test_dir_name):
     if not os.path.exists(train_dir_name):
         os.makedirs(train_dir_name)
-        convert_image_to_array('../data/train_images', train_dir_name)
+        convert_image_to_array('../data/img/train_images', train_dir_name)
     else:
         print('Training set already exists at', train_dir_name)
 
     if not os.path.exists(eval_dir_name):
         os.makedirs(eval_dir_name)
-        convert_image_to_array('../data/eval_images', eval_dir_name)
+        convert_image_to_array('../data/img/eval_images', eval_dir_name)
     else:
          print('Evaluation set already exists at', eval_dir_name)
 
     if not os.path.exists(test_dir_name):
         os.makedirs(test_dir_name)
-        convert_image_to_array('../data/test_images', test_dir_name)
+        convert_image_to_array('../data/img/test_images', test_dir_name)
     else:
          print('Test set already exists at', test_dir_name)
 
