@@ -1,157 +1,116 @@
-# import cv2
 # import os
-# import numpy as np
-# import shutil
-# from split_dataset import split_dataset, partition_data
+# from keras.callbacks import ModelCheckpoint, CSVLogger, TensorBoard
+# import tensorflow as tf
 
 
-# def get_preprocessed_image(img_path, image_size):
-#     img = cv2.imread(img_path)
-#     img = cv2.resize(img, (image_size, image_size))
-#     img = img.astype('float32')
-#     img /= 255
-#     return img
+# class TrainValTensorBoard(TensorBoard):
+#     def __init__(self, log_dir='./logs', **kwargs):
+#         # Make the original `TensorBoard` log to a subdirectory 'training'
+#         training_log_dir = os.path.join(log_dir, 'training')
+#         super(TrainValTensorBoard, self).__init__(training_log_dir, **kwargs)
+
+#         # Log the validation metrics to a separate subdirectory
+#         self.val_log_dir = os.path.join(log_dir, 'validation')
+
+#     def set_model(self, model):
+#         # Setup writer for validation metrics
+#         self.val_writer = tf.summary.create_file_writer(self.val_log_dir)
+#         super(TrainValTensorBoard, self).set_model(model)
+
+#     def on_epoch_end(self, epoch, logs=None):
+#         # Pop the validation logs and handle them separately with
+#         # `self.val_writer`. Also rename the keys so that they can
+#         # be plotted on the same figure with the training metrics
+#         logs = logs or {}
+#         val_logs = {k.replace('val_', ''): v for k, v in logs.items() if k.startswith('val_')}
+#         for name, value in val_logs.items():
+#             summary = tf.Summary()
+#             summary_value = summary.value.add()
+#             summary_value.simple_value = value.item()
+#             summary_value.tag = name
+#             self.val_writer.add_summary(summary, epoch)
+#         self.val_writer.flush()
+
+#         # Pass the remaining logs to `TensorBoard.on_epoch_end`
+#         logs = {k: v for k, v in logs.items() if not k.startswith('val_')}
+#         super(TrainValTensorBoard, self).on_epoch_end(epoch, logs)
+
+#     def on_train_end(self, logs=None):
+#         super(TrainValTensorBoard, self).on_train_end(logs)
+#         self.val_writer.close()
 
 
-# def convert_image_to_array(input_path, output_path):
-#     if not os.path.exists(input_path):
-#         os.makedirs(input_path)
-#     if not os.path.exists(output_path):
-#         os.makedirs(output_path)
-#     IMAGE_SIZE = 256
-#     print("Converting images to numpy arrays...")
-#     for f in os.listdir(input_path):
-#         if f.find(".png") != -1:
-#             img = get_preprocessed_image("{}/{}".format(input_path, f), IMAGE_SIZE)
-#             file_name = f[:f.find(".png")]
-#             np.savez_compressed("{}/{}".format(output_path, file_name), features=img)
-#             retrieve = np.load("{}/{}.npz".format(output_path, file_name))["features"]
+# def generate_callbacks(output_path):
+#     filepath = os.path.join(output_path,
+#             'weights.epoch-{epoch:02d}--loss-{loss:.4f}--accuracy-{accuracy:.4f}--val_loss-{val_loss:.4f}--val_accuracy-{val_accuracy:.4f}.hdf5')
+#     # checkpoint = ModelCheckpoint(filepath, verbose=1, save_weights_only=True, period=2)
+#     checkpoint = ModelCheckpoint(filepath, monitor='val_loss',
+#                                  verbose=1, save_best_only=True,
+#                                  save_weights_only=True, mode='min')
+#     # Create a callback that streams epoch results to a csv file.
+#     csv_file = os.path.join(output_path, 'training.log')
+#     # csv_file = 'weights/training.log'
+#     csv_logger = CSVLogger(csv_file)
+#     log_path = os.path.join(output_path, 'logs')
+#     if not os.path.exists(log_path):
+#         os.makedirs(log_path)
 
-#             assert np.array_equal(img, retrieve)
+#     callbacks_list = [checkpoint, csv_logger, TrainValTensorBoard(log_dir=log_path, write_graph=False)]
+#     return callbacks_list
 
-#             shutil.copyfile("{}/{}.gui".format(input_path, file_name), "{}/{}.gui".format(output_path, file_name))
-
-#     print("Numpy arrays saved in {}".format(output_path))
-
-
-# def prepare_data(train_dir_name, eval_dir_name, test_dir_name):
-#     if not os.path.exists(train_dir_name):
-#         os.makedirs(train_dir_name)
-#         convert_image_to_array('../data/img/train_images', train_dir_name)
-#     else:
-#         print('Training set already exists at %s' % train_dir_name)
-
-#     if not os.path.exists(eval_dir_name):
-#         os.makedirs(eval_dir_name)
-#         convert_image_to_array('../data/img/eval_images', eval_dir_name)
-#     else:
-#          print('Evaluation set already exists at %s' % eval_dir_name)
-
-#     if not os.path.exists(test_dir_name):
-#         os.makedirs(test_dir_name)
-#         convert_image_to_array('../data/img/test_images', test_dir_name)
-#     else:
-#          print('Test set already exists at %s' % test_dir_name)
-
-#     print('All data successfully converted to numpy arrays...')
-
-
-# def main():
-#     train_dir_name = '../data/train/'
-#     test_dir_name = '../data/test/'
-#     eval_dir_name = '../data/eval/'
-#     # Preparing data
-#     partition_data('../data/all_data')
-#     prepare_data(train_dir_name, eval_dir_name, test_dir_name)
-
-# if __name__ == '__main__':
-
-import cv2
 import os
-import numpy as np
-import shutil
-from split_dataset import split_dataset, partition_data
+from keras.callbacks import ModelCheckpoint, CSVLogger
+from tensorflow.keras.callbacks import TensorBoard
+import tensorflow as tf
 
-def get_preprocessed_image(img_path, image_size):
-    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)  # Read the image in grayscale
-    img = cv2.resize(img, (image_size, image_size))  # Resize the image to the desired size
-    
-    # Additional preprocessing steps
-    img = cv2.GaussianBlur(img, (3, 3), 0)  # Apply Gaussian blur to smooth the image
-    img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)[1]  # Apply binary thresholding to make image binary
-    img = cv2.Canny(img, 50, 150)  # Apply Canny edge detection to highlight edges
-    kernel = np.ones((3, 3), np.uint8)
-    img = cv2.dilate(img, kernel, iterations=1)  # Dilate edges to enhance shapes
-    img = cv2.erode(img, kernel, iterations=1)  # Erode edges to further enhance shapes
-    
-    # Resize the image to (256, 256)
-    img = cv2.resize(img, (256, 256))
+class TrainValTensorBoard(TensorBoard):
+    def __init__(self, log_dir='./logs', **kwargs):
+        # Make the original `TensorBoard` log to a subdirectory 'training'
+        training_log_dir = os.path.join(log_dir, 'training')
+        super(TrainValTensorBoard, self).__init__(log_dir=training_log_dir, **kwargs)
 
-    # Stack the image along the third axis to make it 3-channel (RGB)
-    img = np.repeat(img[..., None], 3, axis=2)
+        # Log the validation metrics to a separate subdirectory
+        self.val_log_dir = os.path.join(log_dir, 'validation')
 
-    # Normalize pixel values to range [0, 1]
-    img = img.astype('float32') / 255.0
-    
-    return img
+    def set_model(self, model):
+        # Setup writer for validation metrics
+        self.val_writer = tf.summary.create_file_writer(self.val_log_dir)
+        super(TrainValTensorBoard, self).set_model(model)
 
+    def on_epoch_end(self, epoch, logs=None):
+        # Pop the validation logs and handle them separately with
+        # `self.val_writer`. Also rename the keys so that they can
+        # be plotted on the same figure with the training metrics
+        logs = logs or {}
+        val_logs = {k.replace('val_', ''): v for k, v in logs.items() if k.startswith('val_')}
+        with self.val_writer.as_default():
+            for name, value in val_logs.items():
+                tf.summary.scalar(name, value, step=epoch)
+        self.val_writer.flush()
 
-def convert_image_to_array(input_path, output_path):
-    if not os.path.exists(input_path):
-        os.makedirs(input_path)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    
-    IMAGE_SIZE = 256
-    print("Converting images to numpy arrays...")
-    for f in os.listdir(input_path):
-        if f.lower().endswith(('.png', '.jpg', '.jpeg')):  # Check for PNG, JPEG, and JPG files
-            img = get_preprocessed_image(os.path.join(input_path, f), IMAGE_SIZE)
-            file_name = os.path.splitext(f)[0]  # Extract file name without extension
-            np.savez_compressed(os.path.join(output_path, file_name), features=img)  # Save numpy array
-            retrieve = np.load(os.path.join(output_path, f"{file_name}.npz"))["features"]
-            assert np.array_equal(img, retrieve)
+        # Pass the remaining logs to `TensorBoard.on_epoch_end`
+        logs = {k: v for k, v in logs.items() if not k.startswith('val_')}
+        super(TrainValTensorBoard, self).on_epoch_end(epoch, logs)
 
-            # Copy text from corresponding TXT file
-            txt_file = os.path.join(input_path, f"{file_name}.txt")
-            if os.path.exists(txt_file):
-                shutil.copyfile(txt_file, os.path.join(output_path, f"{file_name}.txt"))
-                
-    print("Numpy arrays saved in", output_path)
+    def on_train_end(self, logs=None):
+        super(TrainValTensorBoard, self).on_train_end(logs)
+        self.val_writer.close()
 
-def prepare_data(train_dir_name, eval_dir_name, test_dir_name):
-    if not os.path.exists(train_dir_name):
-        os.makedirs(train_dir_name)
-        convert_image_to_array('../data/img/train_images', train_dir_name)
-    else:
-        print('Training set already exists at', train_dir_name)
+def generate_callbacks(output_path):
+    filepath = os.path.join(output_path,
+            'weights.epoch-{epoch:02d}--loss-{loss:.4f}--accuracy-{accuracy:.4f}--val_loss-{val_loss:.4f}--val_accuracy-{val_accuracy:.4f}.hdf5')
+    # checkpoint = ModelCheckpoint(filepath, verbose=1, save_weights_only=True, period=2)
+    checkpoint = ModelCheckpoint(filepath, monitor='val_loss',
+                                 verbose=1, save_best_only=True,
+                                 save_weights_only=True, mode='min')
+    # Create a callback that streams epoch results to a csv file.
+    csv_file = os.path.join(output_path, 'training.log')
+    # csv_file = 'weights/training.log'
+    csv_logger = CSVLogger(csv_file)
+    log_path = os.path.join(output_path, 'logs')
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
 
-    if not os.path.exists(eval_dir_name):
-        os.makedirs(eval_dir_name)
-        convert_image_to_array('../data/img/eval_images', eval_dir_name)
-    else:
-         print('Evaluation set already exists at', eval_dir_name)
-
-    if not os.path.exists(test_dir_name):
-        os.makedirs(test_dir_name)
-        convert_image_to_array('../data/img/test_images', test_dir_name)
-    else:
-         print('Test set already exists at', test_dir_name)
-
-    print('All data successfully converted to numpy arrays...')
-
-def main():
-    train_dir_name = '../data/train/'
-    test_dir_name = '../data/test/'
-    eval_dir_name = '../data/eval/'
-    # Preparing data
-    partition_data('../data/handdrawn_images')
-    prepare_data(train_dir_name, eval_dir_name, test_dir_name)
-
-if __name__ == '__main__':
-    main()
-#     main()
-
-
-
+    callbacks_list = [checkpoint, csv_logger, TrainValTensorBoard(log_dir=log_path, write_graph=False)]
+    return callbacks_list
 
