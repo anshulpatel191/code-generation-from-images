@@ -83,9 +83,18 @@ def get_preprocessed_image(img_path, image_size):
     kernel = np.ones((3, 3), np.uint8)
     img = cv2.dilate(img, kernel, iterations=1)  # Dilate edges to enhance shapes
     img = cv2.erode(img, kernel, iterations=1)  # Erode edges to further enhance shapes
-    img = img.astype('float32') / 255.0  # Normalize pixel values to range [0, 1]
+    
+    # Resize the image to (256, 256)
+    img = cv2.resize(img, (256, 256))
+
+    # Stack the image along the third axis to make it 3-channel (RGB)
+    img = np.repeat(img[..., None], 3, axis=2)
+
+    # Normalize pixel values to range [0, 1]
+    img = img.astype('float32') / 255.0
     
     return img
+
 
 def convert_image_to_array(input_path, output_path):
     if not os.path.exists(input_path):
