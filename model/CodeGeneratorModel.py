@@ -87,3 +87,4 @@ class CodeGeneratorModel(BaseModel):
             with redirect_stdout(f):
                 self.image_model.summary()
             # self.image_model.summary(print_fn=lambda x: f.write(x + '\n'))
+#
