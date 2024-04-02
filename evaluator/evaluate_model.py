@@ -1,24 +1,17 @@
+import os
+import glob
 import sys
-sys.path.extend(['..'])
-
-import tensorflow as tf
-config = tf.ConfigProto(log_device_placement=False)
-config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-
-from generator.generate_code import *
+from tensorflow.keras.models import model_from_json
 from nltk.translate.bleu_score import corpus_bleu
-from config.config import *
-from base.BaseModel import *
-from utils.tokenizer import *
-
+from generator.generate_code import load_data, generate_code
+from utils.tokenizer import Tokenizer
 
 def evaluate_model(input_path, model_path, tokenizer, max_length=48, display=False):
     '''
     Evaluate model by comparing actual vs predictions via the BLEU scoring criteria
     :param input_path: input path containing images + gui code pairs to evaluate model on
     :param model_path: path to model files
-    :param tokenizer: a Keras Tokenizer object fit on vocab
+    :param tokenizer: a Tokenizer object fit on vocab
     :param max_length: context length
     :param display: bool on whether to print out DSL code predictions and actual labels to standard output
     :return: 4-ngram BLEU score, list of actual DSL code, list of predicted DSL code
@@ -54,7 +47,7 @@ if __name__ == '__main__':
     # model_path = '../results/'
     vocab_path = '../data/code.vocab'
 
-    tokenizer = tokenizer(vocab_path)
+    tokenizer = Tokenizer(vocab_path)
     bleu, actual, predictions = evaluate_model(test_dir, model_path, tokenizer, CONTEXT_LENGTH, display=False)
     # Calculate BLEU score (standard is 4-gram, but just get all individual N-Gram BLEU scores from 1 gram to 4 gram)
     # By default, the sentence_bleu() and corpus_bleu() scores calculate the cumulative 4-gram BLEU score, also called BLEU-4.
@@ -72,5 +65,3 @@ if __name__ == '__main__':
         fh.write('BLEU-2: %f \n' % corpus_bleu(actual, predictions, weights=(0.5, 0.5, 0, 0)))
         fh.write('BLEU-3: %f \n' % corpus_bleu(actual, predictions, weights=(0.3, 0.3, 0.3, 0)))
         fh.write('BLEU-4: %f \n' % corpus_bleu(actual, predictions, weights=(0.25, 0.25, 0.25, 0.25)))
-
-
