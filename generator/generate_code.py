@@ -1,20 +1,19 @@
 import sys
-
-sys.path.extend(['..'])
-
+sys.path.append('/content/code-generation-from-images')
+sys.path.append('/content/code-generation-from-images/data')
+import os
+import glob
+import numpy as np
 import tensorflow as tf
-
-config = tf.ConfigProto(log_device_placement=False)
-config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import model_from_json
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from config.config import *
 from base.BaseModel import *
 from utils.tokenizer import *
 from data.prepare_data import get_preprocessed_image
 from compiler.classes.Compiler import *
 
+tf.compat.v1.disable_eager_execution()
 
 def generate_code(model, image, tokenizer, max_length=48, display=False):
     '''
@@ -130,7 +129,7 @@ if __name__ == '__main__':
     if not os.path.exists(dsl_dir):
         print('Generating DSL code...')
         os.makedirs(dsl_dir)
-        generate_dsl(test_img_dir, dsl_dir, model_path, tokenizer(vocab_path), CONTEXT_LENGTH, write=True, display=False)
+        generate_dsl(test_img_dir, dsl_dir, model_path, Tokenizer(vocab_path), CONTEXT_LENGTH, write=True, display=False)
     else:
         print('DSL directory already exists...')
 
@@ -143,6 +142,5 @@ if __name__ == '__main__':
     else:
         print('HTML directory already exists...')
 
-
-
+    print("Completed generating HTML files.")
 
