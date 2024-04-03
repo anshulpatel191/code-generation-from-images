@@ -1,6 +1,12 @@
 import os
 import glob
 import sys
+print(sys.path)
+sys.path.append('/content/code-generation-from-images/generator/generate_code.py')
+sys.path.append('/content/code-generation-from-images/generator')
+sys.path.append('/content/code-generation-from-images')
+import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import model_from_json
 from nltk.translate.bleu_score import corpus_bleu
 from generator.generate_code import load_data, generate_code
@@ -44,15 +50,11 @@ if __name__ == '__main__':
         exit(0)
     model_path = argv[0]
     test_dir = '../data/test/'
-    # model_path = '../results/'
     vocab_path = '../data/code.vocab'
 
     tokenizer = Tokenizer(vocab_path)
-    bleu, actual, predictions = evaluate_model(test_dir, model_path, tokenizer, CONTEXT_LENGTH, display=False)
-    # Calculate BLEU score (standard is 4-gram, but just get all individual N-Gram BLEU scores from 1 gram to 4 gram)
-    # By default, the sentence_bleu() and corpus_bleu() scores calculate the cumulative 4-gram BLEU score, also called BLEU-4.
-    # It is common to report the cumulative BLEU-1 to BLEU-4 scores when describing the skill of a text generation system.
-    # 4-gram is the most strict and corresponds the best to human translations
+    bleu, actual, predictions = evaluate_model(test_dir, model_path, tokenizer, max_length=48, display=False)
+
     print('BLEU-1: %f' % corpus_bleu(actual, predictions, weights=(1.0, 0, 0, 0)))
     print('BLEU-2: %f' % corpus_bleu(actual, predictions, weights=(0.5, 0.5, 0, 0)))
     print('BLEU-3: %f' % corpus_bleu(actual, predictions, weights=(0.3, 0.3, 0.3, 0)))
